@@ -1,0 +1,205 @@
+openapi: 3.0.0
+info:
+  title: Insurance Company API
+  version: 1.0.0
+  description: API for managing insurance plans and policies
+
+servers:
+  - url: https://postman-api-demos-9683740c5a53.herokuapp.com/api
+    description: Production Server
+
+security:
+  - bearerAuth: []         # use the same name as above
+
+paths:
+  /auth/token:
+    post:
+      summary: Generate Access Token
+      description: Generates an access token for authentication.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+              required:
+                - email
+                - password
+            example:
+                email: "{{email}}"
+                password: "{{password}}"
+      responses:
+        '200':
+          description: Successful authentication
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                  token_type:
+                    type: string
+                  expires_in:
+                    type: integer
+        '401':
+          description: Unauthorized
+
+  /insurance/plans:
+    get:
+      summary: Get Insurance Plans
+      description: Retrieve a list of available insurance plans.
+      security:
+        - bearerAuth: []
+
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InsurancePlan'
+              examples:
+                200 OK:
+                  value:
+                    - id: 1
+                      name: Life Insurance
+                      coverage: Full Coverage
+                    - id: 2
+                      name: Car Insurance
+                      coverage: Fire and Theft
+        '401':
+          description: Unauthorized
+  /insurance/plan/{id}:
+    get:
+      summary: Get Insurance Plan
+      description: Retrieve a single insurance.
+      security:
+        - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        description: ''
+        required: true
+        style: simple
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InsurancePlan'
+        '404':
+          description: Plan not found
+        '401':
+          description: Unauthorized
+
+  /insurance/policyholders:
+    get:
+      summary: Get Policyholders
+      description: Retrieve a list of policyholders.
+      security:
+        - bearerAuth: []
+
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Policyholder'
+              examples:
+                200 OK:
+                  value:
+                    - id: 1
+                      name: "{{$randomFullName}}"
+                      policy_number: "{{$randomUUID}}"
+                      plan_id: "{{$randomInt}}"
+                    - id: 2
+                      name: "{{$randomFullName}}"
+                      policy_number: "{{$randomUUID}}"
+                      plan_id: "{{$randomInt}}"
+        '401':
+          description: Unauthorized
+  /insurance/policyholder/{id}:
+    get:
+      summary: Get Policyholder
+      description: Retrieve a single policy holder.
+      security:
+        - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        description: ''
+        required: true
+        style: simple
+        schema:
+          type: string
+
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Policyholder'
+        '404':
+          description: Policyholder not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                status: 404
+                type: PolicyHolderNotFoundError
+                message: A policy holder with that ID does not exist
+        '401':
+          description: Unauthorized
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    InsurancePlan:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        coverage:
+          type: string
+
+    Policyholder:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        policy_number:
+          type: string
+        plan_id:
+          type: integer
+
+    Error:
+      type: object
+      properties:
+        status:
+          type: integer
+        type:
+          type: string
+        message:
+          type: string
